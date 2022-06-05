@@ -1,0 +1,34 @@
+{
+  "name": "zapiskimami",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "core-service": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^10.17.60",
+    "aws-cdk-lib": "^2.27.0",
+    "constructs": "^10.1.35",
+    "source-map-support": "^0.5.21",
+    "ts-node": "^10.8.1",
+    "typescript": "^4.7.3"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "cdk-synth-stacks": "cdk synth -c project=gh-auth -c targetEnvironment=main",
+    "cdk-diff": "cdk diff -c project=gh-auth -c targetEnvironment=main",
+    "deploy": "cdk deploy gh-auth-zapiski-* -c project=gh-auth -c targetEnvironment=main",
+    "update-dependencies": "npx npm-check-updates -u --packageFile package.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlexeyPopovUA/github-authentication.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AlexeyPopovUA/github-authentication/issues"
+  },
+  "homepage": "https://github.com/AlexeyPopovUA/github-authentication#readme"
+}

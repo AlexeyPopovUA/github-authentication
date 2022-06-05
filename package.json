@@ -1,12 +1,17 @@
 {
   "name": "github-authentication",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "0.1.0",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest",
+    "cdk": "cdk"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "devDependencies": {},
+  "workspaces": [
+    "zapiskimami",
+    "advanced-logger",
+    "core-function",
+    "core-service"
+  ]
 }
