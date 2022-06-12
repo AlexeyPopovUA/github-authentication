@@ -1,17 +1,8 @@
 const simple_auth = require("simple-oauth2");
 const randomstring = require("randomstring");
+const { SSM } = require("aws-sdk");
 
-import Secrets from "./secrets";
-
-const secrets = new Secrets({
-    GIT_HOSTNAME: "https://github.com",
-    OAUTH_TOKEN_PATH: "/login/oauth/access_token",
-    OAUTH_AUTHORIZE_PATH: "/login/oauth/authorize",
-    OAUTH_CLIENT_ID: "foo",
-    OAUTH_CLIENT_SECRET: "bar",
-    REDIRECT_URL: "http://localhost:3000/callback",
-    OAUTH_SCOPES: "repo,user"
-});
+const ssm = new SSM();
 
 function getScript(mess: string, content: unknown) {
     return `<html lang="en"><meta charset="utf-8"/><body><script type="application/javascript">
@@ -31,25 +22,48 @@ function getScript(mess: string, content: unknown) {
   </script></body></html>`;
 }
 
+const getParameters = async (parametersList: string[]): Promise<Map<string, string>> => {
+    const map = new Map();
+
+    const resp = await ssm.getParameters({
+        Names: parametersList
+    }).promise();
+
+    // todo Wrong types
+    resp.Parameters.forEach((param) => {
+        map.set(param.Name as string, param.Value);
+    });
+
+    return map;
+}
+
 export async function auth() {
-    await secrets.init();
+    const map = await getParameters([
+        "OAUTH_CLIENT_ID",
+        "OAUTH_CLIENT_SECRET",
+        "GIT_HOSTNAME",
+        "OAUTH_TOKEN_PATH",
+        "OAUTH_AUTHORIZE_PATH",
+        "REDIRECT_URL",
+        "OAUTH_SCOPES",
+    ]);
 
     const oauth2 = new simple_auth.AuthorizationCode({
         client: {
-            id: secrets.map.get("OAUTH_CLIENT_ID"),
-            secret: secrets.map.get("OAUTH_CLIENT_SECRET")
+            id: map.get("OAUTH_CLIENT_ID"),
+            secret: map.get("OAUTH_CLIENT_SECRET")
         },
         auth: {
-            tokenHost: secrets.map.get("GIT_HOSTNAME"),
-            tokenPath: secrets.map.get("OAUTH_TOKEN_PATH"),
-            authorizePath: secrets.map.get("OAUTH_AUTHORIZE_PATH")
+            tokenHost: map.get("GIT_HOSTNAME"),
+            tokenPath: map.get("OAUTH_TOKEN_PATH"),
+            authorizePath: map.get("OAUTH_AUTHORIZE_PATH")
         }
     });
 
     // Authorization uri definition
     const authorizationUri = oauth2.authorizeURL({
-        redirect_uri: secrets.map.get("REDIRECT_URL"),
-        scope: secrets.map.get("OAUTH_SCOPES"),
+        redirect_uri: map.get("REDIRECT_URL"),
+        scope: map.get("OAUTH_SCOPES"),
         state: randomstring.generate()
     });
 
@@ -63,17 +77,23 @@ export async function auth() {
 
 export async function callback(e: any) {
     try {
-        await secrets.init();
+        const map = await getParameters([
+            "OAUTH_CLIENT_ID",
+            "OAUTH_CLIENT_SECRET",
+            "GIT_HOSTNAME",
+            "OAUTH_TOKEN_PATH",
+            "OAUTH_AUTHORIZE_PATH"
+        ]);
 
         const oauth2 = new simple_auth.AuthorizationCode({
             client: {
-                id: secrets.map.get("OAUTH_CLIENT_ID"),
-                secret: secrets.map.get("OAUTH_CLIENT_SECRET")
+                id: map.get("OAUTH_CLIENT_ID"),
+                secret: map.get("OAUTH_CLIENT_SECRET")
             },
             auth: {
-                tokenHost: secrets.map.get("GIT_HOSTNAME"),
-                tokenPath: secrets.map.get("OAUTH_TOKEN_PATH"),
-                authorizePath: secrets.map.get("OAUTH_AUTHORIZE_PATH")
+                tokenHost: map.get("GIT_HOSTNAME"),
+                tokenPath: map.get("OAUTH_TOKEN_PATH"),
+                authorizePath: map.get("OAUTH_AUTHORIZE_PATH")
             }
         });
 
